@@ -1,0 +1,14 @@
+{
+  "name": "mern-chat-app",
+  "version": "1.0.0",
+  "description": "An chat application build using MERN",
+  "main": "./backend/server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "iamnayan31",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
