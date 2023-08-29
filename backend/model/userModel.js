@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const bycrypt = require('bcryptjs')
 const userModel = mongoose.Schema(
   {
     name: { type: String, required: true },
@@ -13,4 +14,16 @@ const userModel = mongoose.Schema(
   { timestamp: true }
 )
 
-module.exports = mongoose.model('User', userModel)
+userModel.methods.validatePassword = async function (password) {
+  return await bycrypt.compare(password, this.password)
+}
+
+userModel.pre('save', async function (next) {
+  if (!this.isModified) {
+    next()
+  }
+  const salt = await bycrypt.genSalt(10)
+  this.password = await bycrypt.hash(this.password, salt)
+})
+const User = mongoose.model('User', userModel)
+module.exports = User
