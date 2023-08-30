@@ -1,4 +1,13 @@
-import { Button, FormControl, FormLabel, Input, InputGroup, InputRightElement, VStack } from '@chakra-ui/react'
+import {
+  Button,
+  FormControl,
+  FormLabel,
+  Input,
+  InputGroup,
+  InputRightElement,
+  VStack,
+  useToast,
+} from '@chakra-ui/react'
 import React, { useState } from 'react'
 
 const Signup = () => {
@@ -9,10 +18,37 @@ const Signup = () => {
   const [confirmPassword, setConfirmPassoword] = useState()
   const [pic, setPic] = useState()
   const [loading, setLoading] = useState(false)
+  const toast = useToast()
 
-  const submitHandler = () => {}
+  const submitHandler = () => {
+    setLoading(true)
+    if (!name || !email || !password || !confirmPassword) {
+      toast({
+        title: 'All fields are mandatory',
+        status: 'warning',
+        duration: 5000,
+        isClosable: true,
+        position: 'bottom',
+      })
+      setLoading(false)
+      return
+    }
+    if (password !== confirmPassword) {
+      toast({
+        title: 'Password does not match !',
+        status: 'warning',
+        duration: 5000,
+        isClosable: true,
+        position: 'bottom',
+      })
+      setLoading(false)
+      return
+    }
+  }
+  const handleClickBtn = () => {
+    setShow(!show)
+  }
   const postDetails = () => {}
-  const handleClickBtn = ()=>{}
 
   return (
     <VStack spacing={4} color={'black'}>
@@ -70,7 +106,6 @@ const Signup = () => {
       </FormControl>
       <FormControl id="pic">
         <FormLabel>Upload your pic</FormLabel>
-
         <Input
           type="file"
           p={1.5}
