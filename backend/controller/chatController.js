@@ -98,8 +98,72 @@ const createGroupChat = asyncHandler(async (req, resp) => {
     throw new Error(error.message)
   }
 })
-const addToGroup = asyncHandler(async (req, resp) => {})
-const renameGroupChat = asyncHandler(async (req, resp) => {})
-const removeFromGroup = asyncHandler(async (req, resp) => {})
+
+const renameGroupChat = asyncHandler(async (req, resp) => {
+  const { chatId, chatName } = req.body
+  if (!chatId || !chatName) {
+    resp.status(400).send({ message: 'All fields are required!' })
+  }
+
+  const updatedChat = await Chat.findByIdAndUpdate(chatId, { chatName: chatName }, { new: true })
+    .populate('users', '-password')
+    .populate('groupAdmin', '-password')
+
+  if (!updatedChat) {
+    resp.status(404)
+    throw new Error('Chat not found')
+  }
+
+  resp.status(200).json(updatedChat)
+})
+const addToGroup = asyncHandler(async (req, resp) => {
+  const { chatId, userId } = req.body
+
+  if (!chatId || !userId) {
+    return resp.status(404).send({ message: 'Chat not found' })
+  }
+  const updatedGroup = await Chat.findByIdAndUpdate(
+    chatId,
+    {
+      $push: {
+        users: userId,
+      },
+    },
+    { new: true }
+  )
+    .populate('users', '-password')
+    .populate('groupAdmin', '-password')
+
+  if (!updatedGroup) {
+    resp.status(404)
+    throw new Error('Chat not found')
+  }
+  resp.status(200).json(updatedGroup)
+})
+
+const removeFromGroup = asyncHandler(async (req, resp) => {
+  const { chatId, userId } = req.body
+
+  if (!chatId || !userId) {
+    return resp.status(404).send({ message: 'Chat not found' })
+  }
+  const updatedGroup = await Chat.findByIdAndUpdate(
+    chatId,
+    {
+      $pull: {
+        users: userId,
+      },
+    },
+    { new: true }
+  )
+    .populate('users', '-password')
+    .populate('groupAdmin', '-password')
+
+  if (!updatedGroup) {
+    resp.status(404)
+    throw new Error('Chat not found')
+  }
+  resp.status(200).json(updatedGroup)
+})
 
 module.exports = { getAllChat, accessChat, createGroupChat, addToGroup, renameGroupChat, removeFromGroup }
