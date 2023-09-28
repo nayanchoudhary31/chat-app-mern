@@ -13,6 +13,7 @@ import {
   MenuDivider,
   MenuItem,
   MenuList,
+  Spinner,
   Text,
   Tooltip,
   useDisclosure,
@@ -25,13 +26,14 @@ import ProfileModal from './ProfileModal'
 import { useHistory } from 'react-router-dom'
 import axios from 'axios'
 import ChatLoading from '../ChatLoading'
+import UserListItems from '../../UserAvatar/UserListItems'
 
 const SideDrawer = () => {
   const [search, setSearch] = useState('')
   const [searchResult, setSearchResult] = useState([])
   const [loading, setLoading] = useState(false)
   const [loadingChat, setLoadingChat] = useState()
-  const { user } = ChatState()
+  const { user, setSelectedChat, chats, setChats } = ChatState()
   const history = useHistory()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast()
@@ -53,21 +55,48 @@ const SideDrawer = () => {
 
     try {
       setLoading(true)
-      console.log(user)
       const config = {
         headers: {
-          Auhtorization: `Bearer ${user.token}`,
+          authorization: `Bearer ${user.token}`,
         },
       }
 
       const { data } = await axios.get(`/api/user?search=${search}`, config)
       setLoading(false)
-      console.log('🚀 ~ file: SideDrawer.js:65 ~ searchHandler ~ data:', data)
       setSearchResult(data)
     } catch (error) {
       toast({
+        title: 'Error fetching the chats',
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'bottom-left',
+      })
+    }
+  }
+
+  const accessChats = async (userId) => {
+    try {
+      setLoadingChat(true)
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          authorization: `Bearer ${user.token}`,
+        },
+      }
+      const { data } = await axios.post('/api/chats', { userId }, config)
+
+      // If chat is already there just append it chats list
+      if (!chats.find((c) => c._id === data._id)) setChats([data, ...chats])
+
+      setLoadingChat(false)
+      setSelectedChat(data)
+      onClose()
+    } catch (error) {
+      toast({
         title: 'Error Occured',
-        description: 'Failed to load the search results',
+        description: 'Failed to access chats',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -134,7 +163,14 @@ const SideDrawer = () => {
 
               <Button onClick={searchHandler}>Go</Button>
             </Box>
-            {loading ? <ChatLoading /> : <span>result</span>}
+            {loading ? (
+              <ChatLoading />
+            ) : (
+              searchResult?.map((user) => {
+                return <UserListItems key={user._id} user={user} handleFunction={() => accessChats(user._id)} />
+              })
+            )}
+            {loadingChat && <Spinner ml={'auto'} display={'flex'} />}
           </DrawerBody>
         </DrawerContent>
       </Drawer>
